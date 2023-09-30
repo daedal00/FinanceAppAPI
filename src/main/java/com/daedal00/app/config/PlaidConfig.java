@@ -1,7 +1,6 @@
 package com.daedal00.app.config;
 
 import com.plaid.client.ApiClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,7 +10,7 @@ import java.util.Map;
 @Configuration
 public class PlaidConfig {
     @Bean
-    public ApiClient apiClient(@Autowired PlaidProperties plaidProperties) {
+    public ApiClient apiClient(PlaidProperties plaidProperties) {
         Map<String, String> apiKeys = new HashMap<>();
         apiKeys.put("clientId", plaidProperties.getClientId());
         apiKeys.put("plaidVersion", "2020-09-14"); 

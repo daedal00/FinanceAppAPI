@@ -9,12 +9,19 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import retrofit2.Response;
 
 @Path("/accounts")
 @Produces(MediaType.APPLICATION_JSON)
 public class AccountsResource {
     private final PlaidApi plaidClient;
+
+    @Autowired
+    private PlaidService plaidService;
+
 
     public AccountsResource(PlaidApi plaidClient) {
         this.plaidClient = plaidClient;
@@ -23,7 +30,7 @@ public class AccountsResource {
     @GET
     public AccountsGetResponse getAccounts() throws IOException {
         AccountsGetRequest request = new AccountsGetRequest()
-        .accessToken(PlaidService.accessToken);
+        .accessToken(plaidService.accessToken);
 
         Response<AccountsGetResponse> response = plaidClient
         .accountsGet(request)

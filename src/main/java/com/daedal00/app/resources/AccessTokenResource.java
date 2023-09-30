@@ -1,103 +1,73 @@
 package com.daedal00.app.resources;
 
-import java.io.IOException;
-import com.plaid.client.request.PlaidApi;
-import com.plaid.client.model.ItemPublicTokenExchangeRequest;
-import com.plaid.client.model.ItemPublicTokenExchangeResponse;
-import com.plaid.client.model.TransferAuthorizationUserInRequest;
-import com.plaid.client.model.TransferAuthorizationCreateRequest;
-import com.plaid.client.model.TransferAuthorizationCreateResponse;
-import com.plaid.client.model.TransferCreateRequest;
-import com.plaid.client.model.TransferCreateResponse;
-import com.plaid.client.model.TransferType;
-import com.plaid.client.model.TransferNetwork;
 import com.daedal00.app.service.PlaidService;
-import com.plaid.client.model.ACHClass;
-import com.plaid.client.model.AccountsGetRequest;
-import com.plaid.client.model.AccountsGetResponse;
-import com.plaid.client.model.Products;
-import java.util.List;
-import java.util.Arrays;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.core.MediaType;
+import com.plaid.client.request.PlaidApi;
+import com.plaid.client.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 import retrofit2.Response;
 
-@Path("/set_access_token")
-@Produces(MediaType.APPLICATION_JSON)
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
+@RestController
+@RequestMapping("/plaid")
 public class AccessTokenResource {
+
     private static final Logger LOG = LoggerFactory.getLogger(AccessTokenResource.class);
-    private final PlaidApi plaidClient;
-    private final List<String> plaidProducts;
 
-    public AccessTokenResource(PlaidApi plaidClient, List<String> plaidProducts) {
-        this.plaidClient = plaidClient;
-        this.plaidProducts = plaidProducts;
-    }
+    @Autowired
+    private PlaidApi plaidClient;
 
-    @POST
-    public InfoResource.InfoResponse getAccessToken(@FormParam("public_token") String publicToken)
-        throws IOException {
-        ItemPublicTokenExchangeRequest request = new ItemPublicTokenExchangeRequest()
-        .publicToken(publicToken);
+    @Autowired
+    private PlaidService plaidService;
 
-        Response<ItemPublicTokenExchangeResponse> response = plaidClient
-        .itemPublicTokenExchange(request)
-        .execute();
+    private final List<String> plaidProducts = Arrays.asList(Products.ACCOUNTS.toString(), Products.TRANSFERS.toString()); // Adjust as needed
 
-        PlaidService.accessToken = response.body().getAccessToken();
-        PlaidService.itemID = response.body().getItemId();
+    @PostMapping("/set_access_token")
+    public InfoResource.InfoResponse getAccessToken(@RequestParam("public_token") String publicToken) throws IOException {
+        ItemPublicTokenExchangeRequest request = new ItemPublicTokenExchangeRequest().publicToken(publicToken);
+        Response<ItemPublicTokenExchangeResponse> response = plaidClient.itemPublicTokenExchange(request).execute();
+
+        String userId = "defaultUser";  // Replace with actual user ID if you have authentication
+        plaidService.setAccessToken(userId, response.body().getAccessToken());
+        plaidService.setItemId(userId, response.body().getItemId());
+
         LOG.info("public token: " + publicToken);
-        LOG.info("access token: " + PlaidService.accessToken);
-        LOG.info("item ID: " + response.body().getItemId());
+        LOG.info("access token: " + plaidService.getAccessToken(userId));
+        LOG.info("item ID: " + plaidService.getItemId(userId));
 
-        if (plaidProducts.contains("transfer")) {
-            AccountsGetRequest accountsGetRequest = new AccountsGetRequest()
-            .accessToken(PlaidService.accessToken);
-
-            Response<AccountsGetResponse> accountsGetResponse = plaidClient
-            .accountsGet(accountsGetRequest)
-            .execute();
-
+        if (plaidProducts.contains(Products.TRANSFERS.toString())) {
+            AccountsGetRequest accountsGetRequest = new AccountsGetRequest().accessToken(plaidService.getAccessToken(userId));
+            Response<AccountsGetResponse> accountsGetResponse = plaidClient.accountsGet(accountsGetRequest).execute();
             String accountId = accountsGetResponse.body().getAccounts().get(0).getAccountId();
 
-            TransferAuthorizationUserInRequest user = new TransferAuthorizationUserInRequest()
-            .legalName("FirstName LastName");
-
+            TransferAuthorizationUserInRequest user = new TransferAuthorizationUserInRequest().legalName("FirstName LastName");
             TransferAuthorizationCreateRequest transferAuthorizationCreateRequest = new TransferAuthorizationCreateRequest()
-            .accessToken(PlaidService.accessToken)
-            .accountId(accountId)
-            .type(TransferType.CREDIT)
-            .network(TransferNetwork.ACH)
-            .amount("1.34")
-            .achClass(ACHClass.PPD)
-            .user(user);
+                .accessToken(plaidService.getAccessToken(userId))
+                .accountId(accountId)
+                .type(TransferType.CREDIT)
+                .network(TransferNetwork.ACH)
+                .amount("1.34")
+                .achClass(ACHClass.PPD)
+                .user(user);
 
-            Response<TransferAuthorizationCreateResponse> transferAuthorizationCreateResponse = plaidClient
-            .transferAuthorizationCreate(transferAuthorizationCreateRequest)
-            .execute();
-
+            Response<TransferAuthorizationCreateResponse> transferAuthorizationCreateResponse = plaidClient.transferAuthorizationCreate(transferAuthorizationCreateRequest).execute();
             String authorizationId = transferAuthorizationCreateResponse.body().getAuthorization().getId();
 
             TransferCreateRequest transferCreateRequest = new TransferCreateRequest()
-            .authorizationId(authorizationId)
-            .accessToken(PlaidService.accessToken)
-            .accountId(accountId)
-            .description("Payment");
+                .authorizationId(authorizationId)
+                .accessToken(plaidService.getAccessToken(userId))
+                .accountId(accountId)
+                .description("Payment");
 
-            Response<TransferCreateResponse> transferCreateResponse = plaidClient
-            .transferCreate(transferCreateRequest)
-            .execute();
-
-            PlaidService.transferId = transferCreateResponse.body().getTransfer().getId();
+            Response<TransferCreateResponse> transferCreateResponse = plaidClient.transferCreate(transferCreateRequest).execute();
+            // Assuming you want to store the transfer ID, you can adjust this part as needed
         }
 
-        return new InfoResource.InfoResponse(Arrays.asList(), plaidService.getAccessToken(userId)
-        ,
-        PlaidService.itemID);
+        return new InfoResource.InfoResponse(Arrays.asList(), plaidService.getAccessToken(userId), plaidService.getItemId(userId));
     }
 }
