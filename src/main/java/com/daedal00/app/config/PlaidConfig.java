@@ -1,28 +1,25 @@
 package com.daedal00.app.config;
 
-import com.plaid.client.PlaidClient;
-import org.springframework.beans.factory.annotation.Value;
+import com.plaid.client.ApiClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Configuration
 public class PlaidConfig {
-
-    @Value("${plaid.client.id}")
-    private String clientId;
-
-    @Value("${plaid.client.secret}")
-    private String secret;
-
-    @Value("${plaid.client.publicKey}")
-    private String publicKey;
-
     @Bean
-    public PlaidClient plaidClient() {
-        return PlaidClient.newBuilder()
-            .clientIdAndSecret(clientId, secret)
-            .publicKey(publicKey)
-            .developmentBaseUrl() // Use this for development. Switch to other environments as needed.
-            .build();
+    public ApiClient apiClient(@Autowired PlaidProperties plaidProperties) {
+        Map<String, String> apiKeys = new HashMap<>();
+        apiKeys.put("clientId", plaidProperties.getClientId());
+        apiKeys.put("plaidVersion", "2020-09-14"); 
+        apiKeys.put("secret", plaidProperties.getSecret());
+
+        ApiClient apiClient = new ApiClient(apiKeys);
+        apiClient.setPlaidAdapter(plaidProperties.getEnvironmentUrl());
+
+        return apiClient;
     }
 }
