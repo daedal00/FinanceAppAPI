@@ -27,6 +27,7 @@ public class PlaidService {
 
     @Autowired
     private PlaidApi plaidClient;
+    
 
     public String getAccessToken(String userId) {
         PlaidData plaidData = plaidDataRepository.findByUserId(userId);
@@ -64,8 +65,10 @@ public class PlaidService {
         Response<AccountsGetResponse> response = plaidClient.accountsGet(request).execute();
         return response.body().getAccounts();
     }
+
     LocalDate startLocalDate = LocalDate.parse("2021-01-01");
     LocalDate endLocalDate = LocalDate.parse("2023-01-01");
+
     public List<Transaction> fetchTransactionsFromPlaid(String userId) throws IOException {
         String accessToken = getAccessToken(userId);
         TransactionsGetRequest request = new TransactionsGetRequest()

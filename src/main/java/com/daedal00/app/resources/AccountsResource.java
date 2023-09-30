@@ -1,40 +1,34 @@
 package com.daedal00.app.resources;
 
-import java.io.IOException;
-import com.plaid.client.request.PlaidApi;
 import com.daedal00.app.service.PlaidService;
-import com.plaid.client.model.AccountsGetRequest;
-import com.plaid.client.model.AccountsGetResponse;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
+import com.plaid.client.request.PlaidApi;
+import com.plaid.client.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.web.bind.annotation.*;
 import retrofit2.Response;
 
-@Path("/accounts")
-@Produces(MediaType.APPLICATION_JSON)
+import java.io.IOException;
+import java.util.List;
+
+@RestController
+@RequestMapping("/plaid/accounts")
 public class AccountsResource {
-    private final PlaidApi plaidClient;
+
+    private static final Logger LOG = LoggerFactory.getLogger(AccountsResource.class);
+
+    @Autowired
+    private PlaidApi plaidClient;
 
     @Autowired
     private PlaidService plaidService;
 
-
-    public AccountsResource(PlaidApi plaidClient) {
-        this.plaidClient = plaidClient;
-    }
-
-    @GET
-    public AccountsGetResponse getAccounts() throws IOException {
-        AccountsGetRequest request = new AccountsGetRequest()
-        .accessToken(plaidService.accessToken);
-
-        Response<AccountsGetResponse> response = plaidClient
-        .accountsGet(request)
-        .execute();
-        return response.body();
+    @GetMapping
+    public List<AccountBase> getAccounts(@RequestParam String userId) throws IOException {
+        String accessToken = plaidService.getAccessToken(userId);
+        AccountsGetRequest request = new AccountsGetRequest().accessToken(accessToken);
+        Response<AccountsGetResponse> response = plaidClient.accountsGet(request).execute();
+        return response.body().getAccounts();
     }
 }

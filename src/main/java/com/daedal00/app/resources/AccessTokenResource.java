@@ -25,7 +25,8 @@ public class AccessTokenResource {
     @Autowired
     private PlaidService plaidService;
 
-    private final List<String> plaidProducts = Arrays.asList(Products.ACCOUNTS.toString(), Products.TRANSFERS.toString()); // Adjust as needed
+    private final List<String> plaidProducts = Arrays.asList("accounts", "transfers");
+
 
     @PostMapping("/set_access_token")
     public InfoResource.InfoResponse getAccessToken(@RequestParam("public_token") String publicToken) throws IOException {
@@ -40,7 +41,7 @@ public class AccessTokenResource {
         LOG.info("access token: " + plaidService.getAccessToken(userId));
         LOG.info("item ID: " + plaidService.getItemId(userId));
 
-        if (plaidProducts.contains(Products.TRANSFERS.toString())) {
+        if (plaidProducts.contains("transfers")) {
             AccountsGetRequest accountsGetRequest = new AccountsGetRequest().accessToken(plaidService.getAccessToken(userId));
             Response<AccountsGetResponse> accountsGetResponse = plaidClient.accountsGet(accountsGetRequest).execute();
             String accountId = accountsGetResponse.body().getAccounts().get(0).getAccountId();
