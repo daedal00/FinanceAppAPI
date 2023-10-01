@@ -30,22 +30,20 @@ public class PlaidServiceIntegrationTest {
         User mockUser = new User("mockEmail@example.com", "good_user", "good_password", "Mock", "User");
         userRepository.save(mockUser);
     }
+
     @Test
     public void testGetAccessTokenIntegration() {
-        // Use actual public token from Plaid's sandbox
-        String publicToken = "56339f893c70b7a2375fafa9838cae";
+        User foundUser = userRepository.findByUsername("good_user");
+        assertNotNull(foundUser, "User should not be null");
+
+        String userId = foundUser.getId();
 
         // Call the method
-        String accessToken = plaidService.getAccessToken(publicToken);
+        String accessToken = plaidService.getAccessToken(userId);
 
         // Assert the result
         assertNotNull(accessToken);
         // ... any other assertions based on actual response
     }
 
-    @AfterEach
-    public void teardown() {
-        // Clean up the mock data from the database
-        userRepository.deleteAll();
-    }
 }

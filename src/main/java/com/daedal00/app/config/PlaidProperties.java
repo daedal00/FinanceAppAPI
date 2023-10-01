@@ -5,13 +5,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PlaidProperties {
-    @Value("${PLAID_CLIENT}")
+    @Value("${plaid.client.id}")
     private String clientId;
 
-    @Value("${PLAID_SECRET}")
+    @Value("${plaid.secret}")
     private String secret;
 
-    @Value("${PLAID_ENV}")
+    @Value("${plaid.environment}")
     private String environment;
 
     public String getClientId() {

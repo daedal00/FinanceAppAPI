@@ -1,5 +1,8 @@
 package com.daedal00.app.model;
 
+import java.sql.Date;
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,9 +16,15 @@ public class User {
     private String id;
     private String email;
     private String username;
-    private String password; // store a hashed version for security
+    private String password;
     private String firstName;
     private String lastName;
+
+    private String plaidAccessToken;
+    private String plaidItemId;
+    private List<BankAccount> linkedBankAccounts;
+    private Date lastUpdated;
+
 
     public User() {}
 
@@ -25,5 +34,12 @@ public class User {
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
+    }
+
+    @Data
+    public class BankAccount {
+        private String accountId; // Plaid's account ID
+        private String accountName;
+        private String accountType;
     }
 }
