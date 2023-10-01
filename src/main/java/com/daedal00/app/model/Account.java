@@ -15,6 +15,7 @@ public class Account {
     private String institutionName;
     private String accountType;
     private Double balance;
+    private String plaidAccessToken;
 
     public Account() {}
 

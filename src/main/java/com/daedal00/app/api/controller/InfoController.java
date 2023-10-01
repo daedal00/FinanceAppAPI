@@ -41,19 +41,23 @@ public class InfoController {
     }
 
     @GetMapping("/get-access-token")
-    public ResponseEntity<String> generateAndExchangeToken() {
+    public ResponseEntity<String> generateAndExchangeToken(@RequestParam String userId) {
         try {
-            // Generate sandbox public token
-            String publicToken = plaidService.generateSandboxPublicToken();
-            
-            // Exchange public token for access token
-            String accessToken = plaidService.exchangePublicToken(publicToken);
-            
-            // Store the access token associated with a user or return it
-            // For this example, we're just returning it
+            String accessToken = plaidService.generateAndExchangeSandboxToken();
+            plaidService.setAccessToken(userId, accessToken);
             return ResponseEntity.ok(accessToken);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to generate and exchange token: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/transactions")
+    public ResponseEntity<List<com.daedal00.app.model.Transaction>> getTransactions(@RequestParam String userId) {
+        try {
+            List<com.daedal00.app.model.Transaction> transactions = plaidService.fetchTransactionsFromPlaid(userId);
+            return ResponseEntity.ok(transactions);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 }
