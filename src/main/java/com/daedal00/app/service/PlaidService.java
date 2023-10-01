@@ -10,6 +10,9 @@ import com.plaid.client.model.AccountsGetRequest;
 import com.plaid.client.model.AccountsGetResponse;
 import com.plaid.client.model.ItemPublicTokenExchangeRequest;
 import com.plaid.client.model.ItemPublicTokenExchangeResponse;
+import com.plaid.client.model.Products;
+import com.plaid.client.model.SandboxPublicTokenCreateRequest;
+import com.plaid.client.model.SandboxPublicTokenCreateResponse;
 import com.plaid.client.model.TransactionsGetRequest;
 import com.plaid.client.model.TransactionsGetResponse;
 import com.plaid.client.request.PlaidApi;
@@ -19,6 +22,7 @@ import retrofit2.Response;
 import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,10 +40,7 @@ public class PlaidService {
 
     @Autowired
     private TransactionRepository transactionRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
+    
     public String getAccessToken(String userId) {
         PlaidData plaidData = plaidDataRepository.findByUserId(userId);
         return plaidData != null ? plaidData.getAccessToken() : null;
@@ -113,4 +114,21 @@ public class PlaidService {
         transactionRepository.saveAll(transactions);
         return transactions;
     }
+
+    public String generateSandboxPublicToken() throws IOException {
+        SandboxPublicTokenCreateRequest createRequest = new SandboxPublicTokenCreateRequest()
+            .institutionId("ins_109508")  // Example institution ID for Chase
+            .initialProducts(Arrays.asList(Products.AUTH));
+    
+        Response<SandboxPublicTokenCreateResponse> createResponse = plaidClient
+            .sandboxPublicTokenCreate(createRequest)
+            .execute();
+    
+        if (createResponse.isSuccessful()) {
+            return createResponse.body().getPublicToken();
+        } else {
+            throw new IOException("Failed to generate sandbox public token: " + createResponse.errorBody().string());
+        }
+    }
+    
 }
