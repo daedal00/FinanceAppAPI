@@ -27,7 +27,7 @@ public class PlaidServiceIntegrationTest {
     @BeforeEach
     public void setup() {
         // Create and save a mock user or any other necessary data to the database
-        User mockUser = new User("mockEmail@example.com", "good_user", "good_password", "Mock", "User");
+        User mockUser = new User("newmail@mail.com", "good_user", "good_password", "Jack", "Ko");
         userRepository.save(mockUser);
     }
 

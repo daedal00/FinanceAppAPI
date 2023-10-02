@@ -52,12 +52,13 @@ public class UserService {
     }
 
     public void deleteUser(String userId) {
-        plaidDataRepository.deleteById(userId);
-
-        transactionRepository.deleteById(userId);
-
+        plaidDataRepository.deleteByUserId(userId);
+    
+        transactionRepository.deleteByUserId(userId);
+    
         userRepository.deleteById(userId);
     }
+    
 
     public User findByUsername(String username) {
         return userRepository.findByUsername(username);
@@ -88,20 +89,32 @@ public class UserService {
     public UserDTO updateUser(String id, UserDTO userDTO) {
         User existingUser = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
     
-        existingUser.setUsername(userDTO.getUsername());
-        existingUser.setEmail(userDTO.getEmail());
-        existingUser.setFirstName(userDTO.getFirstName());
-        existingUser.setLastName(userDTO.getLastName());
-
+        if (userDTO.getUsername() != null) {
+            existingUser.setUsername(userDTO.getUsername());
+        }
+    
+        if (userDTO.getEmail() != null) {
+            existingUser.setEmail(userDTO.getEmail());
+        }
+    
+        if (userDTO.getFirstName() != null) {
+            existingUser.setFirstName(userDTO.getFirstName());
+        }
+    
+        if (userDTO.getLastName() != null) {
+            existingUser.setLastName(userDTO.getLastName());
+        }
+    
         if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
             String hashedPassword = hashPassword(userDTO.getPassword());
             existingUser.setPassword(hashedPassword);
         }
-        
+    
         User updatedUser = userRepository.save(existingUser);
     
         return convertToDTO(updatedUser);
     }
+    
     
     
     private UserDTO convertToUserDTO(User user, PlaidData plaidData) {
