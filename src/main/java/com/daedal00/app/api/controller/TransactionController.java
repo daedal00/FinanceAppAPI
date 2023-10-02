@@ -1,6 +1,7 @@
 package com.daedal00.app.api.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.daedal00.app.api.dto.TransactionDTO;
@@ -47,4 +49,14 @@ public class TransactionController {
         transactionService.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/totals")
+    public ResponseEntity<Map<String, Map<String, TransactionService.CategoryTransactions>>> getTransactionTotalsByCategory(@RequestParam String userId) {
+        Map<String, Map<String, TransactionService.CategoryTransactions>> totals = transactionService.getTransactionTotalsByCategory(userId);
+        if (totals == null || totals.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(totals);
+    }
+
 }

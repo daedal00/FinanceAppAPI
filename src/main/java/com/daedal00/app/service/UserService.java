@@ -5,12 +5,14 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.daedal00.app.api.dto.UserDTO;
 import com.daedal00.app.model.PlaidData;
 import com.daedal00.app.model.User;
 import com.daedal00.app.repository.PlaidDataRepository;
+import com.daedal00.app.repository.TransactionRepository;
 import com.daedal00.app.repository.UserRepository;
 
 @Service
@@ -21,6 +23,9 @@ public class UserService {
 
     @Autowired
     private PlaidDataRepository plaidDataRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -46,8 +51,12 @@ public class UserService {
         return convertToDTO(savedUser);
     }
 
-    public void deleteUser(String id) {
-        userRepository.deleteById(id);
+    public void deleteUser(String userId) {
+        plaidDataRepository.deleteById(userId);
+
+        transactionRepository.deleteById(userId);
+
+        userRepository.deleteById(userId);
     }
 
     public User findByUsername(String username) {
@@ -75,6 +84,25 @@ public class UserService {
         PlaidData plaidData = plaidDataRepository.findByUserId(userId);
         return convertToUserDTO(user, plaidData);
     }
+
+    public UserDTO updateUser(String id, UserDTO userDTO) {
+        User existingUser = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+    
+        existingUser.setUsername(userDTO.getUsername());
+        existingUser.setEmail(userDTO.getEmail());
+        existingUser.setFirstName(userDTO.getFirstName());
+        existingUser.setLastName(userDTO.getLastName());
+
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+            String hashedPassword = hashPassword(userDTO.getPassword());
+            existingUser.setPassword(hashedPassword);
+        }
+        
+        User updatedUser = userRepository.save(existingUser);
+    
+        return convertToDTO(updatedUser);
+    }
+    
     
     private UserDTO convertToUserDTO(User user, PlaidData plaidData) {
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
@@ -84,9 +112,8 @@ public class UserService {
         }
         return userDTO;
     }
-    
-    
-    
-    
 
+    private String hashPassword(String plainPassword) {
+        return new BCryptPasswordEncoder().encode(plainPassword);
+    }
 }
