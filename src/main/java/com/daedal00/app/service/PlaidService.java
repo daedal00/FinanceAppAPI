@@ -149,4 +149,12 @@ public class PlaidService {
     
         return exchangeResponse.body().getAccessToken();
     }
+
+    public Double getTotalBalance(String userId) throws IOException {
+        List<AccountBase> accounts = fetchAccountsFromPlaid(userId);
+        return accounts.stream()
+            .mapToDouble(account -> account.getBalances().getCurrent())
+            .sum();
+    }
+    
 }

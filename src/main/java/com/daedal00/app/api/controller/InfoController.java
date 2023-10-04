@@ -60,4 +60,14 @@ public class InfoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
+    @GetMapping("/total-balance")
+    public ResponseEntity<Double> getTotalBalance(@RequestParam String userId) {
+        try {
+            Double totalBalance = plaidService.getTotalBalance(userId);
+            return ResponseEntity.ok(totalBalance);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 }
