@@ -1,5 +1,6 @@
 package com.daedal00.app.api.controller;
 
+import com.daedal00.app.model.Transaction;
 import com.daedal00.app.resources.InfoResource;
 import com.daedal00.app.service.PlaidService;
 import com.plaid.client.model.AccountBase;
@@ -69,5 +70,17 @@ public class InfoController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+
+    @GetMapping("/expenses")
+    public ResponseEntity<List<Transaction>> getExpenses(@RequestParam String userId) {
+        List<Transaction> expenses = plaidService.getExpenses(userId);
+        return ResponseEntity.ok(expenses);
+    }
+
+    @GetMapping("/total-expenses")
+    public ResponseEntity<Double> getTotalExpenses(@RequestParam String userId) {
+        Double totalExpenses = plaidService.getTotalExpenses(userId);
+        return ResponseEntity.ok(totalExpenses);
     }
 }

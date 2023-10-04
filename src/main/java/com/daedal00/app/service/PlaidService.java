@@ -1,6 +1,7 @@
 package com.daedal00.app.service;
 
 import com.daedal00.app.model.PlaidData;
+import com.daedal00.app.model.Transaction;
 import com.daedal00.app.repository.PlaidDataRepository;
 import com.daedal00.app.repository.TransactionRepository;
 import com.daedal00.app.repository.UserRepository;
@@ -157,4 +158,17 @@ public class PlaidService {
             .sum();
     }
     
+    public List<Transaction> getExpenses(String userId) {
+        List<Transaction> transactions = transactionRepository.findByUserId(userId);
+        return transactions.stream()
+            .filter(transaction -> transaction.getAmount() < 0) // Assuming negative amounts are expenses
+            .collect(Collectors.toList());
+    }
+
+    public Double getTotalExpenses(String userId) {
+        List<Transaction> expenses = getExpenses(userId);
+        return expenses.stream()
+            .mapToDouble(Transaction::getAmount)
+            .sum();
+    }    
 }
