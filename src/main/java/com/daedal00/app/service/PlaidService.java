@@ -40,9 +40,6 @@ public class PlaidService {
 
     @Autowired
     private TransactionRepository transactionRepository;
-
-    @Autowired
-    private UserRepository userRepository;
     
     public String getAccessToken(String userId) {
         PlaidData plaidData = plaidDataRepository.findByUserId(userId);

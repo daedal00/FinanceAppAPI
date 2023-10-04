@@ -47,9 +47,13 @@ public class UserService {
 
     public UserDTO saveUser(UserDTO userDTO) {
         User user = convertToEntity(userDTO);
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+            user.setPassword(hashPassword(userDTO.getPassword()));
+        }
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);
     }
+    
 
     public void deleteUser(String userId) {
         plaidDataRepository.deleteByUserId(userId);
