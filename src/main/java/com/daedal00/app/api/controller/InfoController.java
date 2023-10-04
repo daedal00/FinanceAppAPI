@@ -41,6 +41,7 @@ public class InfoController {
         return new InfoResource.InfoResponse(accountNames, accessToken, itemId);
     }
 
+    // Used for sandbox testing
     @GetMapping("/get-access-token")
     public ResponseEntity<String> generateAndExchangeToken(@RequestParam String userId) {
         try {
@@ -51,6 +52,18 @@ public class InfoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to generate and exchange token: " + e.getMessage());
         }
     }
+
+    @PostMapping("/exchange-public-token")
+    public ResponseEntity<String> exchangePublicToken(@RequestParam String userId, @RequestBody String publicToken) {
+        try {
+            String accessToken = plaidService.exchangePublicToken(publicToken);
+            plaidService.setAccessToken(userId, accessToken);
+            return ResponseEntity.ok(accessToken);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to exchange public token: " + e.getMessage());
+        }
+    }
+
 
     @GetMapping("/transactions")
     public ResponseEntity<List<com.daedal00.app.model.Transaction>> getTransactions(@RequestParam String userId) {
