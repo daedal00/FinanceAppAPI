@@ -60,10 +60,20 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<?> createUser(@RequestBody UserDTO userDTO) {
+        User existingUserByUsername = userRepository.findByUsername(userDTO.getUsername());
+        User existingUserByEmail = userRepository.findByEmail(userDTO.getEmail());
+        if (existingUserByUsername != null || existingUserByEmail != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username or Email already exists");
+        }
+
+        String hashedPassword = new BCryptPasswordEncoder().encode(userDTO.getPassword());
+        userDTO.setPassword(hashedPassword);
+
         UserDTO savedUserDTO = userService.saveUser(userDTO);
         return ResponseEntity.ok(savedUserDTO);
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
