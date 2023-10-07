@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.daedal00.app.JwtUtil;
+import com.daedal00.app.JwtUtils;
 import com.daedal00.app.api.dto.UserDTO;
 import com.daedal00.app.model.User;
 import com.daedal00.app.repository.UserRepository;
@@ -29,7 +29,7 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtUtils jwtUtils;
 
     @Autowired
     private UserRepository userRepository;
@@ -38,7 +38,7 @@ public class UserController {
     public ResponseEntity<?> loginUser(@RequestBody UserDTO userDTO) {
         User user = userRepository.findByUsername(userDTO.getUsername());
         if (user != null && new BCryptPasswordEncoder().matches(userDTO.getPassword(), user.getPassword())) {
-            String token = jwtUtil.generateToken(userDTO.getUsername());
+            String token = jwtUtils.generateJwtToken(userDTO.getUsername());
             return ResponseEntity.ok(token);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
