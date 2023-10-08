@@ -1,24 +1,17 @@
 package com.daedal00.app.api.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
 import com.daedal00.app.api.dto.UserDTO;
 import com.daedal00.app.model.User;
 import com.daedal00.app.repository.UserRepository;
 import com.daedal00.app.service.UserService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -30,16 +23,8 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserDTO userDTO) {
-        User user = userRepository.findByUsername(userDTO.getUsername());
-        if (user != null && new BCryptPasswordEncoder().matches(userDTO.getPassword(), user.getPassword())) {
-            String token = jwtUtils.generateJwtToken(userDTO.getUsername());
-            return ResponseEntity.ok(token);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        }
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
@@ -55,21 +40,20 @@ public class UserController {
         return ResponseEntity.ok(userDTO);
     }
 
-    @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody UserDTO userDTO) {
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody UserDTO userDTO) {
         User existingUserByUsername = userRepository.findByUsername(userDTO.getUsername());
         User existingUserByEmail = userRepository.findByEmail(userDTO.getEmail());
         if (existingUserByUsername != null || existingUserByEmail != null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username or Email already exists");
         }
 
-        String hashedPassword = new BCryptPasswordEncoder().encode(userDTO.getPassword());
+        String hashedPassword = passwordEncoder.encode(userDTO.getPassword());
         userDTO.setPassword(hashedPassword);
 
         UserDTO savedUserDTO = userService.saveUser(userDTO);
         return ResponseEntity.ok(savedUserDTO);
     }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
@@ -85,5 +69,4 @@ public class UserController {
         }
         return ResponseEntity.ok(updatedUserDTO);
     }
-
 }

@@ -17,10 +17,6 @@ public class User {
     private String firstName;
     private String lastName;
     private String plaidDataId;
-    private String provider;  // e.g., "google", "facebook"
-    private String providerId;  // ID given by the OAuth2 provider
-
-
 
     public User() {}
 
