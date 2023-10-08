@@ -23,7 +23,6 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService)
             .passwordEncoder(passwordEncoder());
@@ -33,7 +32,7 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-                .requestMatchers("/", "/home").permitAll()
+                .requestMatchers("/", "/home", "/api/users/register").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(formLogin -> formLogin
