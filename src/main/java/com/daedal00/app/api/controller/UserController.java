@@ -1,6 +1,7 @@
 package com.daedal00.app.api.controller;
 
 import java.util.List;
+import java.security.Principal;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.daedal00.app.JwtUtils;
 import com.daedal00.app.api.dto.UserDTO;
 import com.daedal00.app.model.User;
 import com.daedal00.app.repository.UserRepository;
@@ -29,20 +29,18 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private JwtUtils jwtUtils;
-
-    @Autowired
     private UserRepository userRepository;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserDTO userDTO) {
-        User user = userRepository.findByUsername(userDTO.getUsername());
-        if (user != null && new BCryptPasswordEncoder().matches(userDTO.getPassword(), user.getPassword())) {
-            String token = jwtUtils.generateJwtToken(userDTO.getUsername());
-            return ResponseEntity.ok(token);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getCurrentUser(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
+        User user = userRepository.findByUsername(principal.getName());
+        if (user == null) {
+            // Handle the case where the user is not found in your database
+        }
+        return ResponseEntity.ok(userService.convertToDTO(user));
     }
 
     @GetMapping

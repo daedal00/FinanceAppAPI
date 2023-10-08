@@ -72,7 +72,7 @@ public class UserService {
         return modelMapper.map(userDTO, User.class);
     }
 
-    private UserDTO convertToDTO(User user) {
+    public UserDTO convertToDTO(User user) {
         return modelMapper.map(user, UserDTO.class);
     }
 
