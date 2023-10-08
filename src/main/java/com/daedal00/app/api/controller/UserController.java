@@ -40,11 +40,6 @@ public class UserController {
         return ResponseEntity.ok(userDTO);
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "login";
-    }
-
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDTO userDTO) {
         User existingUserByUsername = userRepository.findByUsername(userDTO.getUsername());
@@ -57,7 +52,7 @@ public class UserController {
         userDTO.setPassword(hashedPassword);
 
         UserDTO savedUserDTO = userService.saveUser(userDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUserDTO);  // Explicitly send a CREATED status
+        return ResponseEntity.ok(savedUserDTO);
     }
 
 
