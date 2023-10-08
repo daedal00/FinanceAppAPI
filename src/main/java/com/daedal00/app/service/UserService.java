@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.daedal00.app.api.dto.UserDTO;
@@ -119,7 +120,13 @@ public class UserService {
         return convertToDTO(updatedUser);
     }
     
-    
+    public UserDTO convertOAuth2UserToDTO(OAuth2User oauth2User) {
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUsername(oauth2User.getAttribute("login")); // For GitHub
+        userDTO.setEmail(oauth2User.getAttribute("email"));
+        // Add more attributes as needed
+        return userDTO;
+    }
     
     private UserDTO convertToUserDTO(User user, PlaidData plaidData) {
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
