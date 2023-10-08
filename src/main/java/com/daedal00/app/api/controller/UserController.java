@@ -1,14 +1,11 @@
 package com.daedal00.app.api.controller;
 
 import java.util.List;
-import java.security.Principal;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,18 +30,16 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser(Principal principal) {
-        System.out.println("Inside /me endpoint");
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody UserDTO userDTO) {
+        User user = userRepository.findByUsername(userDTO.getUsername());
+        if (user != null && new BCryptPasswordEncoder().matches(userDTO.getPassword(), user.getPassword())) {
+            String token = jwtUtils.generateJwtToken(userDTO.getUsername());
+            return ResponseEntity.ok(token);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
-        OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) principal;
-        OAuth2User oauth2User = authToken.getPrincipal();
-        UserDTO userDTO = userService.convertOAuth2UserToDTO(oauth2User);
-        return ResponseEntity.ok(userDTO);
     }
-
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
