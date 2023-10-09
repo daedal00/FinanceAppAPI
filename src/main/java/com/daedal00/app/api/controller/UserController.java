@@ -3,11 +3,6 @@ package com.daedal00.app.api.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +11,8 @@ import com.daedal00.app.model.User;
 import com.daedal00.app.repository.UserRepository;
 import com.daedal00.app.service.UserService;
 import com.daedal00.app.util.JwtUtil;
+
+import lombok.Data;
 
 import java.util.List;
 
@@ -33,29 +30,28 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
     private JwtUtil jwtUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserDTO userDTO) {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(userDTO.getUsername(), userDTO.getPassword())
-            );
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect username or password");
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) throws Exception {
+
+        final User userFromDb = userService.findByUsername(authenticationRequest.getUsername());
+
+        if (userFromDb == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
         }
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(userDTO.getUsername());
-        final String jwt = jwtUtil.generateToken(userDetails.getUsername());
+        // Check if the hashed password in the database matches the hashed version of the provided password
+        if (!passwordEncoder.matches(authenticationRequest.getPassword(), userFromDb.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect password.");
+        }
 
-        return ResponseEntity.ok(new AuthenticationResponse(jwt));
+        // If password matches, generate JWT token
+        final String token = jwtUtil.generateToken(userFromDb.getUsername());
+
+        return ResponseEntity.ok(new AuthenticationResponse(token));
     }
+
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
@@ -102,16 +98,21 @@ public class UserController {
         return ResponseEntity.ok(updatedUserDTO);
     }
     
-    public class AuthenticationResponse {
+    public static class AuthenticationResponse {
         private final String jwt;
-    
+
         public AuthenticationResponse(String jwt) {
             this.jwt = jwt;
         }
-    
+
         public String getJwt() {
             return jwt;
         }
     }
-    
+
+    @Data
+    public static class JwtRequest {
+        private String username;
+        private String password;
+    }
 }
