@@ -50,9 +50,7 @@ public class UserService {
 
     public UserDTO saveUser(UserDTO userDTO) {
         User user = convertToEntity(userDTO);
-        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
-            user.setPassword(hashPassword(userDTO.getPassword()));
-        }
+        user.setPassword(userDTO.getPassword());
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);
     }
@@ -112,9 +110,9 @@ public class UserService {
             existingUser.setLastName(userDTO.getLastName());
         }
     
+        // Update the password directly
         if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
-            String hashedPassword = hashPassword(userDTO.getPassword());
-            existingUser.setPassword(hashedPassword);
+            existingUser.setPassword(userDTO.getPassword());
         }
     
         User updatedUser = userRepository.save(existingUser);

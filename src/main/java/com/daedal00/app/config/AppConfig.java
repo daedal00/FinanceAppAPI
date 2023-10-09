@@ -8,17 +8,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.daedal00.app.service.CustomUserDetailsService;
-import com.daedal00.app.util.JwtRequestFilter;
-import com.daedal00.app.util.JwtUtil;
 
 @Configuration
 public class AppConfig {
-
-    @Bean
-    public JwtRequestFilter jwtRequestFilter(CustomUserDetailsService userDetailsService, JwtUtil jwtUtil) {
-        return new JwtRequestFilter(userDetailsService, jwtUtil);
-    }
-
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

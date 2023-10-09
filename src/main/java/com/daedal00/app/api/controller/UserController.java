@@ -3,6 +3,8 @@ package com.daedal00.app.api.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,9 +29,6 @@ public class UserController {
     private UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
     private JwtUtil jwtUtil;
 
     @PostMapping("/login")
@@ -41,8 +40,8 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
         }
 
-        // Check if the hashed password in the database matches the hashed version of the provided password
-        if (!passwordEncoder.matches(authenticationRequest.getPassword(), userFromDb.getPassword())) {
+        // Check if the password in the database matches the provided password
+        if (!authenticationRequest.getPassword().equals(userFromDb.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect password.");
         }
 
@@ -75,8 +74,8 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username or Email already exists");
         }
 
-        String hashedPassword = passwordEncoder.encode(userDTO.getPassword());
-        userDTO.setPassword(hashedPassword);
+        // Save the plain password directly
+        userDTO.setPassword(userDTO.getPassword());
 
         UserDTO savedUserDTO = userService.saveUser(userDTO);
         return ResponseEntity.ok(savedUserDTO);
