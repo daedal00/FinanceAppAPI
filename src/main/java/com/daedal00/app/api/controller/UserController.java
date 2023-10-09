@@ -3,18 +3,17 @@ package com.daedal00.app.api.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import com.daedal00.app.api.dto.UserDTO;
+import com.daedal00.app.model.PlaidData;
 import com.daedal00.app.model.User;
+import com.daedal00.app.repository.PlaidDataRepository;
 import com.daedal00.app.repository.UserRepository;
 import com.daedal00.app.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.Data;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -33,6 +32,15 @@ public class UserController {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
+    private PlaidDataRepository plaidDataRepository;
+
+    @GetMapping("/check-plaid-link")
+    public ResponseEntity<?> checkPlaidLink(@RequestParam String userId) {
+        PlaidData plaidData = plaidDataRepository.findByUserId(userId);
+        boolean isPlaidLinked = plaidData != null && plaidData.getAccessToken() != null;
+        return ResponseEntity.ok().body(new PlaidLinkStatusResponse(isPlaidLinked));
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(HttpServletRequest request) throws Exception {
@@ -53,11 +61,16 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials.");
             }
 
-            return ResponseEntity.ok().body("Login successful.");
+            UserDTO userDTO = new UserDTO();
+            userDTO.setId(userFromDb.getId());
+            userDTO.setUsername(userFromDb.getUsername());
+
+            return ResponseEntity.ok().body(userDTO);
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization header.");
     }
+
 
 
     @GetMapping
@@ -103,5 +116,17 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(updatedUserDTO);
+    }
+
+    public static class PlaidLinkStatusResponse {
+        private final boolean isPlaidLinked;
+
+        public PlaidLinkStatusResponse(boolean isPlaidLinked) {
+            this.isPlaidLinked = isPlaidLinked;
+        }
+
+        public boolean getIsPlaidLinked() {
+            return isPlaidLinked;
+        }
     }
 }
