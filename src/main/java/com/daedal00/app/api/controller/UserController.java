@@ -61,6 +61,13 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials.");
             }
 
+            if (userFromDb != null && passwordEncoder.matches(password, userFromDb.getPassword())) {
+                UserDTO userDTO = new UserDTO();
+                userDTO.setId(userFromDb.getId());
+                userDTO.setUsername(userFromDb.getUsername());
+                return ResponseEntity.ok().body(userDTO);
+            }
+
             UserDTO userDTO = new UserDTO();
             userDTO.setId(userFromDb.getId());
             userDTO.setUsername(userFromDb.getUsername());
