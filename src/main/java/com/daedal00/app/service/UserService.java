@@ -30,6 +30,9 @@ public class UserService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll()
             .stream()
@@ -129,6 +132,6 @@ public class UserService {
     }
 
     private String hashPassword(String plainPassword) {
-        return new BCryptPasswordEncoder().encode(plainPassword);
+        return passwordEncoder.encode(plainPassword);
     }
 }
