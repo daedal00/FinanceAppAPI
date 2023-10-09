@@ -50,10 +50,12 @@ public class UserService {
 
     public UserDTO saveUser(UserDTO userDTO) {
         User user = convertToEntity(userDTO);
-        user.setPassword(userDTO.getPassword());
+        // Hash the password before saving
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);
     }
+    
     
 
     public void deleteUser(String userId) {
@@ -110,7 +112,6 @@ public class UserService {
             existingUser.setLastName(userDTO.getLastName());
         }
     
-        // Update the password directly
         if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
             existingUser.setPassword(userDTO.getPassword());
         }
@@ -127,9 +128,5 @@ public class UserService {
             userDTO.setItemId(plaidData.getItemId());
         }
         return userDTO;
-    }
-
-    private String hashPassword(String plainPassword) {
-        return passwordEncoder.encode(plainPassword);
     }
 }

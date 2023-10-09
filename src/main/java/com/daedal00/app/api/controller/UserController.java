@@ -12,10 +12,12 @@ import com.daedal00.app.api.dto.UserDTO;
 import com.daedal00.app.model.User;
 import com.daedal00.app.repository.UserRepository;
 import com.daedal00.app.service.UserService;
-import com.daedal00.app.util.JwtUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Data;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 
 @RestController
@@ -29,26 +31,32 @@ public class UserController {
     private UserRepository userRepository;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private BCryptPasswordEncoder passwordEncoder;
+
 
     @PostMapping("/login")
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) throws Exception {
+    public ResponseEntity<?> login(HttpServletRequest request) throws Exception {
+        String authorizationHeader = request.getHeader("Authorization");
 
-        final User userFromDb = userService.findByUsername(authenticationRequest.getUsername());
+        if (authorizationHeader != null && authorizationHeader.startsWith("Basic")) {
+            String base64Credentials = authorizationHeader.substring("Basic".length()).trim();
+            byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+            String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+            final String[] values = credentials.split(":", 2);
 
-        if (userFromDb == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
+            String username = values[0];
+            String password = values[1];
+
+            final User userFromDb = userService.findByUsername(username);
+
+            if (userFromDb == null || !passwordEncoder.matches(password, userFromDb.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials.");
+            }
+
+            return ResponseEntity.ok().body("Login successful.");
         }
 
-        // Check if the password in the database matches the provided password
-        if (!authenticationRequest.getPassword().equals(userFromDb.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect password.");
-        }
-
-        // If password matches, generate JWT token
-        final String token = jwtUtil.generateToken(userFromDb.getUsername());
-
-        return ResponseEntity.ok(new AuthenticationResponse(token));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization header.");
     }
 
 
@@ -95,23 +103,5 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(updatedUserDTO);
-    }
-    
-    public static class AuthenticationResponse {
-        private final String jwt;
-
-        public AuthenticationResponse(String jwt) {
-            this.jwt = jwt;
-        }
-
-        public String getJwt() {
-            return jwt;
-        }
-    }
-
-    @Data
-    public static class JwtRequest {
-        private String username;
-        private String password;
     }
 }
