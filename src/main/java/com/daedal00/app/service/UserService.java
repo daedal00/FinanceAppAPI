@@ -71,7 +71,7 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-    private User convertToEntity(UserDTO userDTO) {
+    public User convertToEntity(UserDTO userDTO) {
         return modelMapper.map(userDTO, User.class);
     }
 

@@ -3,16 +3,19 @@ package com.daedal00.app.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import lombok.Data;
+
+@Data
 @Component
 public class PlaidProperties {
     @Value("${plaid.client.id}")
-    private String clientId;
+    public String clientId;
 
     @Value("${plaid.secret}")
-    private String secret;
+    public String secret;
 
     @Value("${plaid.environment}")
-    private String environment;
+    public String environment;
 
     public String getClientId() {
         return clientId;

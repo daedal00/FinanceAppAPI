@@ -1,15 +1,22 @@
 package com.daedal00.app.service;
 
+import com.daedal00.app.api.dto.UserDTO;
 import com.daedal00.app.model.PlaidData;
 import com.daedal00.app.model.Transaction;
+import com.daedal00.app.model.User;
 import com.daedal00.app.repository.PlaidDataRepository;
 import com.daedal00.app.repository.TransactionRepository;
 import com.daedal00.app.repository.UserRepository;
+import com.plaid.client.ApiClient;
 import com.plaid.client.model.AccountBase;
 import com.plaid.client.model.AccountsGetRequest;
 import com.plaid.client.model.AccountsGetResponse;
+import com.plaid.client.model.CountryCode;
 import com.plaid.client.model.ItemPublicTokenExchangeRequest;
 import com.plaid.client.model.ItemPublicTokenExchangeResponse;
+import com.plaid.client.model.LinkTokenCreateRequest;
+import com.plaid.client.model.LinkTokenCreateRequestUser;
+import com.plaid.client.model.LinkTokenCreateResponse;
 import com.plaid.client.model.Products;
 import com.plaid.client.model.SandboxPublicTokenCreateRequest;
 import com.plaid.client.model.SandboxPublicTokenCreateResponse;
@@ -27,6 +34,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,6 +48,40 @@ public class PlaidService {
 
     @Autowired
     private TransactionRepository transactionRepository;
+
+    @Autowired
+    private UserService userService;
+
+
+    @Value("${plaid.client.id}")
+    public String clientid;
+
+    @Value("${plaid.secret}")
+    public String secret;
+    
+    public String createLinkToken(UserDTO userDTO) throws Exception {
+        User user = userService.convertToEntity(userDTO);
+        String clientUserId = user.getId();
+
+        LinkTokenCreateRequestUser requestUser = new LinkTokenCreateRequestUser().clientUserId(clientUserId);
+        LinkTokenCreateRequest request = new LinkTokenCreateRequest()
+            .user(requestUser)
+            .clientName("Finance App")
+            .products(Arrays.asList(Products.fromValue("auth")))
+            .countryCodes(Arrays.asList(CountryCode.US))
+            .language("en")
+            .redirectUri("http://localhost:3000/dashboard") // Replace with your frontend URL
+            .webhook("YOUR_BACKEND_URL_FOR_PLAID_WEBHOOK"); // Replace with your backend webhook URL
+
+        PlaidApi plaidClient = new ApiClient(clientid, secret, ApiClient.Development).createService(PlaidApi.class);
+        Response<LinkTokenCreateResponse> response = plaidClient.linkTokenCreate(request).execute();
+
+        if (response.isSuccessful()) {
+            return response.body().getLinkToken();
+        } else {
+            throw new Exception("Failed to create Plaid link token");
+        }
+    }
     
     public String getAccessToken(String userId) {
         PlaidData plaidData = plaidDataRepository.findByUserId(userId);
@@ -158,7 +200,7 @@ public class PlaidService {
     public List<Transaction> getExpenses(String userId) {
         List<Transaction> transactions = transactionRepository.findByUserId(userId);
         return transactions.stream()
-            .filter(transaction -> transaction.getAmount() < 0) // Assuming negative amounts are expenses
+            .filter(transaction -> transaction.getAmount() < 0)
             .collect(Collectors.toList());
     }
 

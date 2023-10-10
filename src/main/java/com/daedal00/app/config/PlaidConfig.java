@@ -16,7 +16,6 @@ public class PlaidConfig {
     public ApiClient apiClient(@Autowired PlaidProperties plaidProperties) {
         Map<String, String> apiKeys = new HashMap<>();
         apiKeys.put("clientId", plaidProperties.getClientId());
-        apiKeys.put("plaidVersion", "2020-09-14"); 
         apiKeys.put("secret", plaidProperties.getSecret());
 
         ApiClient apiClient = new ApiClient(apiKeys);
