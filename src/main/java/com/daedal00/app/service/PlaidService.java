@@ -23,19 +23,30 @@ import com.plaid.client.model.SandboxPublicTokenCreateResponse;
 import com.plaid.client.model.TransactionsGetRequest;
 import com.plaid.client.model.TransactionsGetResponse;
 import com.plaid.client.request.PlaidApi;
+import com.plaid.client.model.Products;
+import com.plaid.client.model.CountryCode;
+import com.plaid.client.model.LinkTokenCreateRequest;
+import com.plaid.client.model.LinkTokenCreateRequestUser;
+import com.plaid.client.model.LinkTokenCreateResponse;
 
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.stereotype.Service;
+import org.springframework.web.service.annotation.HttpExchange;
 
 @Service
 public class PlaidService {
@@ -58,30 +69,6 @@ public class PlaidService {
 
     @Value("${plaid.secret}")
     public String secret;
-    
-    public String createLinkToken(UserDTO userDTO) throws Exception {
-        User user = userService.convertToEntity(userDTO);
-        String clientUserId = user.getId();
-
-        LinkTokenCreateRequestUser requestUser = new LinkTokenCreateRequestUser().clientUserId(clientUserId);
-        LinkTokenCreateRequest request = new LinkTokenCreateRequest()
-            .user(requestUser)
-            .clientName("Finance App")
-            .products(Arrays.asList(Products.fromValue("auth")))
-            .countryCodes(Arrays.asList(CountryCode.US))
-            .language("en")
-            .redirectUri("http://localhost:3000/dashboard") // Replace with your frontend URL
-            .webhook("YOUR_BACKEND_URL_FOR_PLAID_WEBHOOK"); // Replace with your backend webhook URL
-
-        PlaidApi plaidClient = new ApiClient(clientid, secret, ApiClient.Development).createService(PlaidApi.class);
-        Response<LinkTokenCreateResponse> response = plaidClient.linkTokenCreate(request).execute();
-
-        if (response.isSuccessful()) {
-            return response.body().getLinkToken();
-        } else {
-            throw new Exception("Failed to create Plaid link token");
-        }
-    }
     
     public String getAccessToken(String userId) {
         PlaidData plaidData = plaidDataRepository.findByUserId(userId);
@@ -209,5 +196,37 @@ public class PlaidService {
         return expenses.stream()
             .mapToDouble(Transaction::getAmount)
             .sum();
-    }    
+    }
+
+    public LinkTokenCreateResponse generateLinkTokenForUser(User user) throws IOException {
+        // Create your Plaid client
+        HashMap<String, String> apiKeys = new HashMap<>();
+        apiKeys.put("clientId", clientid);
+        apiKeys.put("secret", secret);
+        ApiClient apiClient = new ApiClient(apiKeys);
+        apiClient.setPlaidAdapter(ApiClient.Development);
+        plaidClient = apiClient.createService(PlaidApi.class);
+
+        String clientUserId = user.getId().toString();
+        LinkTokenCreateRequestUser userRequest = new LinkTokenCreateRequestUser().clientUserId(clientUserId);
+
+        // Create a link_token for the given user
+        LinkTokenCreateRequest request = new LinkTokenCreateRequest()
+            .user(userRequest)
+            .clientName("Finance App")
+            .products(Arrays.asList(Products.fromValue("auth")))
+            .countryCodes(Arrays.asList(CountryCode.CA))
+            .language("en")
+            .redirectUri("http://localhost:3000/dashboard")
+            .webhook("https://webhook.example.com");
+
+        Response<LinkTokenCreateResponse> response = plaidClient.linkTokenCreate(request).execute();
+
+        if (!response.isSuccessful()) {
+            throw new IOException("Failed to generate link token: " + response.errorBody().string());
+        }
+
+        return response.body();
+    }
+
 }

@@ -11,14 +11,13 @@ import com.daedal00.app.model.PlaidData;
 import com.daedal00.app.model.User;
 import com.daedal00.app.repository.PlaidDataRepository;
 import com.daedal00.app.repository.UserRepository;
-import com.daedal00.app.service.PlaidService;
 import com.daedal00.app.service.UserService;
+
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -32,9 +31,6 @@ public class UserController {
     private UserRepository userRepository;
 
     @Autowired
-    private PlaidService plaidService;
-
-    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
@@ -45,16 +41,6 @@ public class UserController {
         PlaidData plaidData = plaidDataRepository.findByUserId(userId);
         boolean isPlaidLinked = plaidData != null && plaidData.getAccessToken() != null;
         return ResponseEntity.ok().body(new PlaidLinkStatusResponse(isPlaidLinked));
-    }
-
-    @PostMapping("/create_link_token")
-    public ResponseEntity<?> createPlaidLinkToken(@RequestBody UserDTO userDTO) {
-        try {
-            String linkToken = plaidService.createLinkToken(userDTO);
-            return new ResponseEntity<>(Collections.singletonMap("link_token", linkToken), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     @PostMapping("/login")
@@ -94,7 +80,6 @@ public class UserController {
     }
 
 
-
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
@@ -117,7 +102,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username or Email already exists");
         }
 
-        // Save the plain password directly
         userDTO.setPassword(userDTO.getPassword());
 
         UserDTO savedUserDTO = userService.saveUser(userDTO);

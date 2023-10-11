@@ -1,6 +1,7 @@
 package com.daedal00.app.config;
 
 import com.plaid.client.request.PlaidApi;
+import com.daedal00.app.model.PlaidProperties;
 import com.plaid.client.ApiClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

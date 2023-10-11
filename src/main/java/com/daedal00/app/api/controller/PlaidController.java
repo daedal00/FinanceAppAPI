@@ -1,0 +1,61 @@
+package com.daedal00.app.api.controller;
+
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.daedal00.app.model.User;
+import com.daedal00.app.repository.UserRepository;
+import com.daedal00.app.service.PlaidService;
+import com.daedal00.app.service.UserService;
+import com.plaid.client.model.LinkTokenCreateResponse;
+
+import java.io.IOException;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+
+@CrossOrigin(origins = "http://localhost:3000")
+@RequestMapping("/plaid")
+@RestController
+public class PlaidController {
+
+    @Autowired
+    private PlaidService plaidService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @GetMapping("/get-link-token")
+    public LinkTokenCreateResponse getLinkToken() throws IOException {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String username = userDetails.getUsername();
+        User user = userRepository.findByUsername(username);
+        return plaidService.generateLinkTokenForUser(user);
+    }
+
+    @PostMapping("/set_access_token")
+    public ResponseEntity<String> setAccessToken(@RequestBody Map<String, String> payload) {
+        String publicToken = payload.get("public_token");
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String username = userDetails.getUsername();
+        User user = userRepository.findByUsername(username);
+        try {
+            String accessToken = plaidService.exchangePublicToken(publicToken);
+            userService.linkUserWithPlaidData(user.getId(), accessToken);
+            return ResponseEntity.ok("User linked successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error linking user: " + e.getMessage());
+        }
+    }
+}

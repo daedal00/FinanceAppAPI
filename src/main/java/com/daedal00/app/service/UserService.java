@@ -1,5 +1,6 @@
 package com.daedal00.app.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,6 @@ public class UserService {
     }
     
     
-
     public void deleteUser(String userId) {
         plaidDataRepository.deleteByUserId(userId);
     
@@ -79,14 +79,17 @@ public class UserService {
         return modelMapper.map(user, UserDTO.class);
     }
 
-    public User linkUserWithPlaidData(String userId, PlaidData plaidData) {
+    public User linkUserWithPlaidData(String userId, String accessToken) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    
+        PlaidData plaidData = new PlaidData();
         plaidData.setUserId(user.getId());
+        plaidData.setAccessToken(accessToken);
         plaidDataRepository.save(plaidData);
+    
         return user;
     }
     
-
     public UserDTO getUserWithPlaidData(String userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         PlaidData plaidData = plaidDataRepository.findByUserId(userId);
