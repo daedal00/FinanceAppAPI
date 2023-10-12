@@ -124,6 +124,13 @@ public class UserController {
         return ResponseEntity.ok(updatedUserDTO);
     }
 
+    @GetMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        request.getSession().invalidate();
+        return ResponseEntity.ok("Logged out successfully");
+    }
+
+
     public static class PlaidLinkStatusResponse {
         private final boolean isPlaidLinked;
 

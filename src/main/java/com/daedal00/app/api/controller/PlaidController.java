@@ -12,6 +12,8 @@ import com.daedal00.app.repository.UserRepository;
 import com.daedal00.app.service.PlaidService;
 import com.daedal00.app.service.UserService;
 import com.plaid.client.model.LinkTokenCreateResponse;
+import com.plaid.client.model.ItemPublicTokenExchangeRequest;
+import com.plaid.client.model.ItemPublicTokenExchangeResponse;
 
 import java.io.IOException;
 import java.util.Map;
@@ -36,7 +38,7 @@ public class PlaidController {
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/get-link-token")
+    @PostMapping("/get-link-token")
     public LinkTokenCreateResponse getLinkToken() throws IOException {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = userDetails.getUsername();
@@ -51,7 +53,8 @@ public class PlaidController {
         String username = userDetails.getUsername();
         User user = userRepository.findByUsername(username);
         try {
-            String accessToken = plaidService.exchangePublicToken(publicToken);
+            ItemPublicTokenExchangeRequest request = new ItemPublicTokenExchangeRequest().publicToken(publicToken);
+            String accessToken = plaidService.exchangePublicToken(request.getPublicToken());
             userService.linkUserWithPlaidData(user.getId(), accessToken);
             return ResponseEntity.ok("User linked successfully");
         } catch (Exception e) {

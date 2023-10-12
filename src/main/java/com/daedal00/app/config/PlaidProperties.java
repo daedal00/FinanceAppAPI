@@ -1,4 +1,4 @@
-package com.daedal00.app.model;
+package com.daedal00.app.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

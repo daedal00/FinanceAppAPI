@@ -217,8 +217,8 @@ public class PlaidService {
             .products(Arrays.asList(Products.fromValue("auth")))
             .countryCodes(Arrays.asList(CountryCode.CA))
             .language("en")
-            .redirectUri("http://localhost:3000/dashboard")
-            .webhook("https://webhook.example.com");
+            .redirectUri("https://55a2-206-12-138-212.ngrok.io/dashboard")
+            .webhook("https://55a2-206-12-138-212.ngrok.io");
 
         Response<LinkTokenCreateResponse> response = plaidClient.linkTokenCreate(request).execute();
 
