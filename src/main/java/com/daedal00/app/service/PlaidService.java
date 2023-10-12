@@ -122,8 +122,8 @@ public class PlaidService {
     }
 
     
-    LocalDate startLocalDate = LocalDate.parse("2021-01-01"); // To Change
-    LocalDate endLocalDate = LocalDate.parse("2023-01-01");
+    LocalDate startLocalDate = LocalDate.parse("2023-08-01"); // To Change
+    LocalDate endLocalDate = LocalDate.parse("2023-10-01");
 
     public List<com.daedal00.app.model.Transaction> fetchTransactionsFromPlaid(String userId) throws IOException {
         String accessToken = getAccessToken(userId);
@@ -216,7 +216,7 @@ public class PlaidService {
         LinkTokenCreateRequest request = new LinkTokenCreateRequest()
             .user(userRequest)
             .clientName("Finance App")
-            .products(Arrays.asList(Products.fromValue("auth")))
+            .products(Arrays.asList(Products.fromValue("auth"), Products.fromValue("transactions")))
             .countryCodes(Arrays.asList(CountryCode.CA))
             .language("en")
             .redirectUri("https://55a2-206-12-138-212.ngrok.io/dashboard")

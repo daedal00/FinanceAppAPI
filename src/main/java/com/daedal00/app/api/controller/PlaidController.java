@@ -1,7 +1,6 @@
 package com.daedal00.app.api.controller;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,7 +12,6 @@ import com.daedal00.app.service.PlaidService;
 import com.daedal00.app.service.UserService;
 import com.plaid.client.model.LinkTokenCreateResponse;
 import com.plaid.client.model.ItemPublicTokenExchangeRequest;
-import com.plaid.client.model.ItemPublicTokenExchangeResponse;
 
 import java.io.IOException;
 import java.util.Map;
