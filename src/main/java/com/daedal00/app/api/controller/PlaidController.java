@@ -61,4 +61,11 @@ public class PlaidController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error linking user: " + e.getMessage());
         }
     }
+    
+    @PostMapping("/webhook")
+    public ResponseEntity<String> handleWebhook(@RequestBody Map<String, Object> webhookData) {
+        plaidService.handleWebhookNotification(webhookData);
+        return ResponseEntity.ok("Webhook received");
+    }
+
 }

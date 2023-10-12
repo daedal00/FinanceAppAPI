@@ -39,11 +39,13 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.stereotype.Service;
 import org.springframework.web.service.annotation.HttpExchange;
@@ -218,7 +220,7 @@ public class PlaidService {
             .countryCodes(Arrays.asList(CountryCode.CA))
             .language("en")
             .redirectUri("https://55a2-206-12-138-212.ngrok.io/dashboard")
-            .webhook("https://55a2-206-12-138-212.ngrok.io");
+            .webhook("https://55a2-206-12-138-212.ngrok.io/plaid/webhook");
 
         Response<LinkTokenCreateResponse> response = plaidClient.linkTokenCreate(request).execute();
 
@@ -228,5 +230,51 @@ public class PlaidService {
 
         return response.body();
     }
+
+    public void handleWebhookNotification(Map<String, Object> webhookData) {
+        String webhookType = (String) webhookData.get("webhook_type");
+        String webhookCode = (String) webhookData.get("webhook_code");
+        
+        // Handle different types of webhook notifications
+        switch (webhookType) {
+            case "TRANSACTIONS":
+                handleTransactionWebhook(webhookCode, webhookData);
+                break;
+            // Add more cases for other webhook types if needed
+            default:
+                System.out.println("Unhandled webhook type: " + webhookType);
+        }
+    }
+    
+    private void handleTransactionWebhook(String webhookCode, Map<String, Object> webhookData) {
+        String userId = (String) webhookData.get("user_id"); // Assuming you have user_id in the webhook data
+    
+        switch (webhookCode) {
+            case "INITIAL_UPDATE":
+                // Fetch the latest transactions for the user
+                try {
+                    fetchTransactionsFromPlaid(userId);
+                    System.out.println("Fetched initial transactions for user: " + userId);
+                } catch (IOException e) {
+                    System.err.println("Error fetching initial transactions for user: " + userId + ". Error: " + e.getMessage());
+                }
+                break;
+    
+            case "HISTORICAL_UPDATE":
+                // Fetch the latest transactions for the user
+                try {
+                    fetchTransactionsFromPlaid(userId);
+                    System.out.println("Fetched historical transactions for user: " + userId);
+                } catch (IOException e) {
+                    System.err.println("Error fetching historical transactions for user: " + userId + ". Error: " + e.getMessage());
+                }
+                break;
+    
+            default:
+                System.out.println("Unhandled transaction webhook code: " + webhookCode + " for user: " + userId);
+        }
+    }
+    
+    
 
 }
