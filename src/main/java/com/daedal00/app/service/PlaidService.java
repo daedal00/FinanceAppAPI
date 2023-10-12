@@ -274,7 +274,4 @@ public class PlaidService {
                 System.out.println("Unhandled transaction webhook code: " + webhookCode + " for user: " + userId);
         }
     }
-    
-    
-
 }

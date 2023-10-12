@@ -1,6 +1,5 @@
 package com.daedal00.app.service;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,7 +50,6 @@ public class UserService {
 
     public UserDTO saveUser(UserDTO userDTO) {
         User user = convertToEntity(userDTO);
-        // Hash the password before saving
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);

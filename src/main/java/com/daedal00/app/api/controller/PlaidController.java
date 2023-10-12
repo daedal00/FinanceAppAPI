@@ -38,7 +38,7 @@ public class PlaidController {
     @Autowired
     private UserRepository userRepository;
 
-    @PostMapping("/get-link-token")
+    @PostMapping("/get_link_token")
     public LinkTokenCreateResponse getLinkToken() throws IOException {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = userDetails.getUsername();
